@@ -2,6 +2,7 @@
 import streamlit as st
 from components.sidebar import sidebar
 from components.charts import patient_line_chart, appointment_donut_chart
+from src.modules.m30.m30_page import render_m30_page
 
 # All categories and their modules
 CATEGORIES = {
@@ -148,11 +149,14 @@ def patient_dashboard():
         "I - Integrated Capstone Projects"
     ])
 
-    # Handle sidebar selection
+    # Handle sidebar selection — only switch view when the user picks
+    # a *different* category from the sidebar, so that in-page navigation
+    # (e.g., E6 → m30) is not overridden on rerun.
     if selected != "Dashboard" and selected in CATEGORIES:
-        st.session_state.selected_category = selected
-        st.session_state.view = "category"
-        st.session_state.selected_module = None
+        if st.session_state.selected_category != selected:
+            st.session_state.selected_category = selected
+            st.session_state.view = "category"
+            st.session_state.selected_module = None
     elif selected == "Dashboard":
         st.session_state.view = "main"
         st.session_state.selected_category = None
@@ -161,6 +165,8 @@ def patient_dashboard():
     # ROUTER
     if st.session_state.view == "category":
         show_category_view()
+    elif st.session_state.view == "m30":
+        render_m30_page()
     elif st.session_state.view == "module":
         show_module_detail()
     else:
@@ -347,9 +353,9 @@ def show_category_view():
                 mcol2.metric("Records", f"{records:,}")
                 
                 if st.button("→", key=f"mod_{code}", use_container_width=True):
-                    st.session_state.selected_module = module
-                    st.session_state.view = "module"
-                    st.rerun()
+                    if code == "E6":
+                        st.session_state.view = "m30"
+                        st.rerun()
                 st.markdown("---")
     
     st.divider()
